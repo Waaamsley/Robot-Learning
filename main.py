@@ -1,21 +1,16 @@
 import numpy as np
 import cv2
 
-# window output prep. - deprecated, could be useful later
-# cv2.namedWindow('environment feed', cv2.WINDOW_NORMAL)
-# cv2.resizeWindow('environment feed', 300, 300)
+# CURRENT WORK:
+# issue with obstacles being angled, doesnt detect well.
 
 # font
 my_font = cv2.FONT_HERSHEY_SIMPLEX
 
 capture = cv2.VideoCapture(0)
 
-# defining black limits:
-#lower_hue = np.array([0, 128, 128])
-#upper_hue = np.array([150, 128, 128])
-
 lower_hue = np.array([0, 0, 0])
-upper_hue = np.array([110, 110, 110])
+upper_hue = np.array([100, 100, 100])
 
 while (True):
     # capture frame by frame.
@@ -23,12 +18,9 @@ while (True):
 
     # captures video, cvtColor param2 can get color modes.
     frame = cv2.resize(frame, (0, 0), None, .5, .5)
-    #color = cv2.cvtColor(frame, cv2.COLOR_BGRa2RGB)  # BGR2YUV
+    color = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-    #calibration?
-    color = cv2.cvtColor(frame, cv2.COLOR_BGRa2YUV) #BGR2YUV
-
-
+    #applies lower and upper limits to pixel values.
     mask = cv2.inRange(color, lower_hue, upper_hue)
 
     # further editing, remove noise in feed
@@ -62,9 +54,9 @@ while (True):
 
     #diplsay these frames
     cv2.imshow('frame', color)
-    cv2.imshow('mask', mask)
-    cv2.imshow('maskOpen', maskOpen)
-    cv2.imshow('maskClose', maskClose)
+    #cv2.imshow('mask', mask)
+    #cv2.imshow('maskOpen', maskOpen)
+    #cv2.imshow('maskClose', maskClose)
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
