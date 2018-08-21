@@ -5,38 +5,32 @@ class receiver:
     PORT_NUMBER = 5000
     SIZE = 1024
     SPEAK = 1.5
-    listen = True
-    messages = []
     hostName = gethostbyname('0.0.0.0')
     server_addr = None
-    received = False
-    last_message = "Received"
 
     mySocket = socket( AF_INET, SOCK_DGRAM )
     mySocket.bind( (hostName, PORT_NUMBER) )
 
     print ('awake')
 
-    def receive(self):
-        while (self.listen):
-            (data, address) = self.mySocket.recvfrom(self.SIZE)
-            text = str(data)[2:-1]
-            if (len(self.messages) > 0 and text == self.messages[-1]):
-                self.resend()
-            else:
-                self.server_addr = address
-                self.messages.append(text)
-                self.received = True
+    def communicate(self, message, timeout, recv_only):
+        reply = None
+        if not recv_only:
+            self.mySocket.sendto(str.encode(message), (self.SERVER_IP, self.PORT_NUMBER))
 
-        quit()
-
-    def send(self, message):
-        print (message)
-        self.mySocket.sendto(str.encode(message), self.server_addr)
-        if (message != 'Received'):
-            self.last_message = message
-
-    def resend(self):
-        print(self.last_message)
-        self.mySocket.sendto(str.encode(self.last_message), self.server_addr)
-
+        persist = True
+        while (persist):
+            self.mySocket.settimeout(timeout)
+            try:
+                (data, address) = self.mySocket.recvfrom(self.SIZE)
+                if recv_only:
+                    reply = str(data)[2:-1]
+                    persist = False
+                else:
+                    self.mySocket.sendto(str.encode(message), (self.SERVER_IP, self.PORT_NUMBER))
+            except Exception as e:
+                print(e, timeout)
+                if not recv_only:
+                    persist = False
+        
+        return reply

@@ -11,9 +11,9 @@ from time import sleep
 my_font = cv2.FONT_HERSHEY_SIMPLEX
 capture = cv2.VideoCapture(0)
 client = test.client()
-receive_client = test.client()
-t0 = threading.Thread(target = receive_client.receiver, args = [])
-t0.start()
+#receive_client = test.client()
+#t0 = threading.Thread(target = receive_client.receiver, args = [])
+#t0.start()
 conversion = 3.65
 # codec = cv2.VideoWriter_fourcc('M', 'J', 'P', 'G')
 # out1 = cv2.VideoWriter('/Users/james/Desktop/robot_vid_raw.avi', codec, 20, (960, 540))
@@ -37,10 +37,6 @@ watcher_loop = True
 
 
 def warp_me(feed):
-    # top_left = [164, 0]
-    # top_right = [960, 91]
-    # bottom_left = [164, 540]
-    # bottom_right = [960, 449]
     top_left = [379, 0]
     top_right = [954, 116]
     bottom_left = [379, 540]
@@ -296,7 +292,7 @@ def calculated_turn(current_x, current_y, destination_x, destination_y, origin_x
     turn_degrees = get_angle_difference(current_x, current_y, destination_x, destination_y, origin_x, origin_y)
     turn_angle = int(turn_degrees * 1.9)
 
-    client.command('rt ' + str(turn_angle), receive_client)
+    client.command('rt ' + str(turn_angle))#, receive_client)
 
     return
 
@@ -332,7 +328,7 @@ def re_align(colour, grid):
     y_distance = abs(robot_central_y - closest_y)
     distance = x_distance + y_distance
 
-    client.command('md ' + str(int(distance * conversion)), receive_client)
+    client.command('md ' + str(int(distance * conversion)))#, receive_client)
     i = 0
     while i < 2:
         if client.action_complete:
@@ -399,7 +395,7 @@ def command_brain(commands, robot_locales, command_count, transitioned, waiting)
                 if commands[count][0:1] == 't':
                     com = something(commands[count])
                 print (com)
-                t1 = threading.Thread(target = client.command, args = [com, receive_client, ])
+                t1 = threading.Thread(target = client.command, args = [com])#, receive_client, ])
                 t1.start()
                 print('command sent')
             transition = False
