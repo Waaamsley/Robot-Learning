@@ -25,7 +25,7 @@ def get_moves(state, wall_sections):
         if (temp_key not in wall_sections):
             move_keys.append(temp_key)
 
-    if (int(s_key[0]) + 1 <= 5):
+    if (int(s_key[0]) + 1 <= 4):
         temp_key = str(int(s_key[0]) + 1) + s_key[1]
         if (temp_key not in wall_sections):
             move_keys.append(temp_key)

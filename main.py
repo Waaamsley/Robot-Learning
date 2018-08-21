@@ -11,6 +11,9 @@ from time import sleep
 my_font = cv2.FONT_HERSHEY_SIMPLEX
 capture = cv2.VideoCapture(0)
 client = test.client()
+receive_client = test.client()
+t0 = threading.Thread(target = receive_client.receiver, args = [])
+t0.start()
 conversion = 3.65
 # codec = cv2.VideoWriter_fourcc('M', 'J', 'P', 'G')
 # out1 = cv2.VideoWriter('/Users/james/Desktop/robot_vid_raw.avi', codec, 20, (960, 540))
@@ -34,10 +37,14 @@ watcher_loop = True
 
 
 def warp_me(feed):
-    top_left = [164, 0]
-    top_right = [960, 91]
-    bottom_left = [164, 540]
-    bottom_right = [960, 449]
+    # top_left = [164, 0]
+    # top_right = [960, 91]
+    # bottom_left = [164, 540]
+    # bottom_right = [960, 449]
+    top_left = [379, 0]
+    top_right = [954, 116]
+    bottom_left = [379, 540]
+    bottom_right = [954, 442]
     points = np.array([bottom_left, bottom_right, top_right, top_left])
     dest_top_left = [0, 0]
     dest_top_right = [960, 0]
@@ -65,11 +72,11 @@ def watcher():
 
 def section_dict(original):
     grid = {}
-    for i in range(6):
+    for i in range(5):
         for j in range(3):
-            x_min = 160 * i
+            x_min = 192 * i
             y_min = 180 * j
-            grid[str(i) + str(j)] = original[y_min:y_min + 180, x_min:x_min + 160]
+            grid[str(i) + str(j)] = original[y_min:y_min + 180, x_min:x_min + 192]
     return grid
 
 
@@ -149,13 +156,13 @@ def build_actions(grid, wall_locales):
     robot_locales = find_robot(grid)
 
     robot_key = list(robot_locales.keys())[0]
-    x_key = random.randint(0, 5)
+    x_key = random.randint(0, 4)
     y_key = random.randint(0, 2)
     goal_key = str(x_key) + str(y_key)
 
 
     while robot_key == goal_key or goal_key in wall_locales:
-        x_key = random.randint(0, 5)
+        x_key = random.randint(0, 4)
         y_key = random.randint(0, 2)
         goal_key = str(x_key) + str(y_key)
 
@@ -277,6 +284,7 @@ def get_robot_centre(colour):
 def get_details():
     rete, framez = capture.read()
     framez = cv2.resize(framez, (0, 0), None, .5, .5)
+    # cv2.imshow('testing123', framez)
     framez = warp_me(framez)
     colour = cv2.cvtColor(framez, cv2.COLOR_BGR2RGB)
     x_coords, y_coords, robot_central_x, robot_central_y, front_hat = get_robot_centre(colour)
@@ -288,7 +296,7 @@ def calculated_turn(current_x, current_y, destination_x, destination_y, origin_x
     turn_degrees = get_angle_difference(current_x, current_y, destination_x, destination_y, origin_x, origin_y)
     turn_angle = int(turn_degrees * 1.9)
 
-    client.command('rt ' + str(turn_angle))
+    client.command('rt ' + str(turn_angle), receive_client)
 
     return
 
@@ -301,7 +309,7 @@ def re_align(colour, grid):
     closest_y = None
     smallest_distance = 9999
     for key, section in robot_locales.items():
-        central_x = int((160 * int(key[0])) + (160/2))
+        central_x = int((192 * int(key[0])) + (192/2))
         central_y = int((180 * int(key[1])) + (180/2))
         x_distance = abs(robot_central_x - central_x)
         y_distance = abs(robot_central_y - central_y)
@@ -324,7 +332,7 @@ def re_align(colour, grid):
     y_distance = abs(robot_central_y - closest_y)
     distance = x_distance + y_distance
 
-    client.command('md ' + str(int(distance * conversion)))
+    client.command('md ' + str(int(distance * conversion)), receive_client)
     i = 0
     while i < 2:
         if client.action_complete:
@@ -349,38 +357,33 @@ def something(command):
     colour, x_coords, y_coords, robot_central_x, robot_central_y, front_hat = get_details()
     x_diff = x_coords[front_hat] - robot_central_x
     y_diff = y_coords[front_hat] - robot_central_y
-    sign = int(command[2:])
 
     dest_x = 0
     dest_y = 0
-
-    if x_diff < 0 and abs(x_diff) > abs(y_diff):
-        if sign > 0:
-            dest_y = robot_central_y - 60
-        else:
-            dest_y = robot_central_y + 60
-    elif x_diff > 0 and abs(x_diff) > abs(y_diff):
-        if sign > 0:
-            dest_y = robot_central_y + 60
-        else:
-            dest_y = robot_central_y - 60
-
-    elif y_diff < 0 and abs(y_diff) > abs(x_diff):
-        if sign > 0:
-            dest_x = robot_central_x + 60
-        else:
-            dest_x = robot_central_x - 60
+    rcx = robot_central_x
+    if abs(x_diff) > abs(y_diff):
+        if x_diff < 0:
+            rcx + 15
+        dest_y = robot_central_y
+        dest_x = robot_central_x + int((x_diff * 1.5))
     else:
-        if sign > 0:
-            dest_x = robot_central_x - 60
-        else:
-            dest_x = robot_central_x + 60
+        # cv2.imshow('Does the math add up? v1' + str(dest_y + 99), colour)
+        # cv2.circle(colour, (robot_central_x, robot_central_y), 7, (255, 0, 0), -1)
+        # cv2.circle(colour, (dest_x, dest_y), 7, (0, 255, 0), -1)
+        # cv2.imshow('Does the math add up? v1' + str(dest_x), colour)
+        dest_x = robot_central_x
+        dest_y = robot_central_y + int((y_diff * 1.5))
 
-    angle_diff = get_angle_difference(x_coords[front_hat], y_coords[front_hat], dest_x, dest_y, robot_central_x,
+
+
+    angle_diff = get_angle_difference(x_coords[front_hat], y_coords[front_hat], dest_x, dest_y, rcx,
                          robot_central_y)
     angle = angle_diff * 1.9
-
-    return 't ' + str(int(angle))
+    # print (dest_x, dest_y, x_coords[front_hat], y_coords[front_hat], robot_central_y, angle)
+    if command[0] == 't':
+        return 't ' + str(int(angle))
+    else:
+        return 'rt ' + str(int(angle))
 
 
 
@@ -393,18 +396,23 @@ def command_brain(commands, robot_locales, command_count, transitioned, waiting)
         if listening:
             if count == 0 or commands[count][0] != 'm':
                 com = commands[count]
-                if commands[count][0] == 't':
+                if commands[count][0:1] == 't':
                     com = something(commands[count])
-                print(com)
-                t1 = threading.Thread(target = client.command, args = [com, ])
+                print (com)
+                t1 = threading.Thread(target = client.command, args = [com, receive_client, ])
                 t1.start()
                 print('command sent')
-            if commands[count][0] == 't':
+            transition = False
+            listening = False
+            if commands[count][0:2] == 'rt':
+                count += 1
+                transition = True
+                listening = True
+            elif commands[count][0] == 't':
                 count += 2
             else:
                 count += 1
-            transition = False
-            listening = False
+
         if len(robot_locales) > 1 and not listening and not transition:
             transition = True
         elif len(robot_locales) == 1 and transition and not listening:
@@ -433,8 +441,9 @@ while (True):
 
     ret, frame = capture.read()
     frame = cv2.resize(frame, (0, 0), None, .5, .5)
-    frame = warp_me(frame)
     # cv2.imwrite('/Users/james/Desktop/frame.png', frame)
+    frame = warp_me(frame)
+
 
     color = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     mask = threshold(color, 'Blue')
@@ -483,7 +492,6 @@ while (True):
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
-print('here')
 capture.release()
 # out1.release()
 # out2.release()
