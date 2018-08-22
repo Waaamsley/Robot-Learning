@@ -1,19 +1,15 @@
 import numpy as np
 import cv2
-import test
+import communicator
 import ASearch
 import random
 import math
 import threading
-from time import sleep
 
 # finals
 my_font = cv2.FONT_HERSHEY_SIMPLEX
 capture = cv2.VideoCapture(0)
-client = test.client()
-#receive_client = test.client()
-#t0 = threading.Thread(target = receive_client.receiver, args = [])
-#t0.start()
+client = communicator.client()
 conversion = 3.65
 # codec = cv2.VideoWriter_fourcc('M', 'J', 'P', 'G')
 # out1 = cv2.VideoWriter('/Users/james/Desktop/robot_vid_raw.avi', codec, 20, (960, 540))
@@ -80,7 +76,6 @@ def draw_boxes(relevant_contours):
     for i in range(len(relevant_contours)):
         x, y, w, z = cv2.boundingRect(relevant_contours[i])
         cv2.rectangle(color, (x, y), (x + w, y + z), (0, 0, 255), 2)
-        # print(str(x) + ' ' + str(y) + ' ' + str(x+w) + ' ' + str(y+h))
         cv2.putText(color, str(i + 1), (x, y + z), my_font, 1, (0, 255, 255), 1, 4)
 
 

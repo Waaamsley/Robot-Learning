@@ -1,5 +1,5 @@
 import sys
-from socket import socket, gethostbyname, AF_INET, SOCK_DGRAM
+from socket import socket, gethostbyname, AF_INET, SOCK_DGRAM, SOCK_STREAM
 
 class receiver:
     PORT_NUMBER = 5000
@@ -8,29 +8,21 @@ class receiver:
     hostName = gethostbyname('0.0.0.0')
     server_addr = None
 
-    mySocket = socket( AF_INET, SOCK_DGRAM )
-    mySocket.bind( (hostName, PORT_NUMBER) )
+    mySocket = socket(AF_INET, SOCK_STREAM)
+    mySocket.bind((hostName, PORT_NUMBER))
 
     print ('awake')
 
-    def communicate(self, message, timeout, recv_only):
-        reply = None
-        if not recv_only:
-            self.mySocket.sendto(str.encode(message), (self.SERVER_IP, self.PORT_NUMBER))
+    mySocket.listen(1)
+    connection, server_addr = mySocket.accept()
 
-        persist = True
-        while (persist):
-            self.mySocket.settimeout(timeout)
-            try:
-                (data, address) = self.mySocket.recvfrom(self.SIZE)
-                if recv_only:
-                    reply = str(data)[2:-1]
-                    persist = False
-                else:
-                    self.mySocket.sendto(str.encode(message), (self.SERVER_IP, self.PORT_NUMBER))
-            except Exception as e:
-                print(e, timeout)
-                if not recv_only:
-                    persist = False
-        
+
+    def receive(self):
+        (data, address) = self.connection.recvfrom(self.SIZE)
+        self.server_addr = address
+        reply = str(data)[2:-1]
+        print(reply)
         return reply
+
+    def send(self, message):
+        self.connection.sendall(str.encode(message))

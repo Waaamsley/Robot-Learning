@@ -1,5 +1,5 @@
 import sys
-from socket import socket, AF_INET, SOCK_DGRAM
+from socket import socket, AF_INET, SOCK_DGRAM, SOCK_STREAM
 from time import sleep
 
 class client:
@@ -8,30 +8,21 @@ class client:
     PORT_NUMBER = 5000
     SIZE = 1024
     print("Test client sending packets to IP {0}, via port {1}\n".format(SERVER_IP, PORT_NUMBER))
-    mySocket = socket(AF_INET, SOCK_DGRAM)
+    mySocket = socket(AF_INET, SOCK_STREAM)
     action_complete = True
+    mySocket.connect((SERVER_IP, PORT_NUMBER))
 
-    def communicate(self, message, timeout, recv_only):
-        reply = None
-        if not recv_only:
-            self.mySocket.sendto(str.encode(message), (self.SERVER_IP, self.PORT_NUMBER))
 
-        persist = True
-        while (persist):
-            self.mySocket.settimeout(timeout)
-            try:
-                (data, address) = self.mySocket.recvfrom(self.SIZE)
-                reply = str(data)[2:-1]
-                persist = False
-            except Exception as e:
-                print(e, timeout)
-                if not recv_only:
-                    self.mySocket.sendto(str.encode(message), (self.SERVER_IP, self.PORT_NUMBER))
-                else:
-                    persist = False
-        
+    def receive(self):
+        (data, address) = self.mySocket.recvfrom(self.SIZE)
+        reply = str(data)[2:-1]
+        print(reply)
         return reply
-        
+
+
+    def send(self, message):
+        self.mySocket.sendall(str.encode(message))
+
 
     def quit(self):
         reply = self.communicate('q', 0.1)
@@ -43,13 +34,16 @@ class client:
         #action_split = action.split()
 
         print('Atempting part 1')
-        reply = self.mySocket.communicate(action, 0.1, False)
+        self.send(action)
+        reply = self.receive()
+        #reply = self.communicate(action, 0.1, False)
         print('Part 1 complete: ', reply)
 
         print('Atempting part 2')
-        reply = self.mySocket.communicate("", 5, True)
+        reply = self.receive()
+        #reply = self.communicate("", 10, True)
         print('Part 2 complete: ', reply)
         
-        print(reply, " end of command")
+        print(reply, " end of command\n------")
 
         self.action_complete = True
