@@ -18,11 +18,16 @@ class receiver:
 
 
     def receive(self):
-        (data, address) = self.connection.recvfrom(self.SIZE)
-        self.server_addr = address
-        reply = str(data)[2:-1]
-        print(reply)
-        return reply
+        try:
+            (data, address) = self.connection.recvfrom(self.SIZE)
+            self.server_addr = address
+            reply = str(data)[2:-1]
+            return reply
+        except Exception as e:
+            print (e)
+            mySocket.listen(1)
+            self.connection, self.server_addr = mySocket.accept()
+        return ""
 
     def send(self, message):
         self.connection.sendall(str.encode(message))

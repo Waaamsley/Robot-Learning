@@ -10,8 +10,13 @@ m1 = ev3.LargeMotor('outB')
 m2 = ev3.LargeMotor('outC')
 
 while listening:
-	reply = receiver.receive()
+	reply = ""
+	while reply == "":
+		reply = receiver.receive()
+		if reply == "":
+			receiver.send("Process Finished")
 	reply_split = reply.split()
+	print(reply, reply_split)
 	receiver.send('Handshake Complete')
 
 	if (reply_split[0] == 'm'):
