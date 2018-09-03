@@ -8,16 +8,15 @@ import warnings
 #Author: Lech Szymanski
 class gridworld:
 
-    def __init__(self, R=-0.04, slippery=True):
+    def __init__(self, robot_env, R=-0.04, slippery=True):
 
         self.plot_handles = []
-        self.grid = np.array([1,1,1,1,
-                              1,0,1,2,
-                              1,1,1,4])
+        self.grid = np.array(robot_env)#np.array([1,1,1,1,
+                     #         1,0,1,2,
+                      #        1,1,1,4])
 
-        # self.grid = None # needs to be set by a method.
-        self.W = 4
-        self.H = 3
+        self.W = 3
+        self.H = 5
 
         self.num_states = len(self.grid)
 
@@ -40,8 +39,8 @@ class gridworld:
         else:
             self.p = [0.1, 0.0, 0.0]
 
-    def reset(self):
-        self.state = 0
+    def reset(self, robot_state):
+        self.state = robot_state
         return self.state, self.R[self.state]
 
     def terminal(self):
@@ -49,9 +48,6 @@ class gridworld:
             return True
         else:
             return False
-
-    # def set_grid(self, robot_environment):
-    #     self.grid = self.robot_environment
 
     def next_state(self,s,a):
         if self.grid[s] != 1:
