@@ -10,28 +10,54 @@ import math
 import threading
 from gridworld import gridworld
 
-alpha = 0.05
+alpha = 0.01
 capture = cv2.VideoCapture(0)
-client = communicator.client()
+navi = navigation.navigator()
+comms = communicator.client()
 
-navigated = navigation.self_navigate(client, "00")
+
+def move_robot(origin, target, state):
+    if origin == target:
+        return state
+    section = state
+
+    print('--------\n', section, origin, target)
+    diff = target - origin
+    if diff == 3:
+        section = str(int(section[0]) + 1) + section[1]
+    elif diff == 1:
+        section = section[0] + str(int(section[1]) + 1)
+    elif diff == -1:
+        section = section[0] + str(int(section[1]) - 1)
+    else:
+        section = str(int(section[0]) - 1) + section[1]
+
+    print(section, origin, target, '--------\n')
+    navi.self_navigate(comms, section, True)
+    return section
+
+
+navigated = navi.self_navigate(comms, "00", True)
+
 if navigated is None:
+    comms.close_connection()
     sys.exit(0)
-navigation.pre_re_align()
+print('did not quittttting')
+navi.pre_re_align()
 
 ret, frame = capture.read()
 frame = cv2.resize(frame, (0, 0), None, .5, .5)
-frame = navigation.warp_me(frame)
+frame = navi.warp_me(frame)
 color = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-env_sections = navigation.section_dict(color)
-wall_sections = navigation.find_walls(env_sections)
-robot_sections = navigation.find_robot(env_sections)
+env_sections = navi.section_dict(color)
+wall_sections = navi.find_walls(env_sections)
+robot_sections = navi.find_robot(env_sections)
 
 env_keys = list(env_sections.keys())
 wall_keys = list(wall_sections.keys())
 robot_key = list(robot_sections.keys())[0]
-goal_key = "42"
+goal = "42"
 
 robot_env = []
 i = 0
@@ -39,9 +65,10 @@ robot_state = 0
 for key in env_keys:
     if key in wall_keys:
         robot_env.append(0)
-    elif key == goal_key:
+    elif key == goal:
         robot_env.append(4)
     elif key == robot_key:
+        robot_env.append(1)
         state = i
     else:
         robot_env.append(1)
@@ -53,27 +80,22 @@ Q = np.zeros((15, 4))
 learning = True
 while(learning):
     state, reward = env.reset(robot_state)
+    position = "00"
     while (env.terminal() == False):
         action = np.argmax(Q[state,:])
-        nstate, nreward = env.step(action)
-        #Q[state, action] = Q[state, action] + alpha*(reward +
-        # do math
-        #move robot
+        new_state, new_reward = env.step(action)
 
-    with open(os.path.dirname(__file__) + '\\Qtable.data', 'w') as f:
+        target_score = reward + max(Q[new_state, :])
+        Q[state, action] = Q[state, action] + alpha*(target_score - Q[state, action])
+        position = move_robot(state, new_state, position)
+        state, reward = new_state, new_reward
+    Q[state] = [1, 1, 1, 1]
+    print(Q)
+
+    with open(os.path.dirname(__file__) + '/Qtable.data', 'w') as f:
         pickle.dump(Q, f)
-    navigation.self_navigate(client, "00")
-    navigation.pre_re_align()
+    navi.self_navigate(comms, "00", True)
+    navi.pre_re_align()
+    learning = False
 
-
-print(Q)
-
-
-
-
-
-#env = gridworld()
-
-
-
-
+comms.close_connection()
