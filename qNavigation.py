@@ -10,7 +10,7 @@ import math
 import threading
 from gridworld import gridworld
 
-alpha = 0.01
+alpha = 0.05
 capture = cv2.VideoCapture(0)
 navi = navigation.navigator()
 comms = communicator.client()

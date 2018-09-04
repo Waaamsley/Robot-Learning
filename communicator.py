@@ -27,13 +27,6 @@ class client:
             return reply
         except error as e:
             print (e)
-            if e.errno == errno.ECONNRESET:
-                return "-1"
-            else:
-                sleep(0.5)
-            self.mySocket.connect((self.SERVER_IP, self.PORT_NUMBER))
-        return "1"
-
 
     def send(self, message):
         self.mySocket.sendall(str.encode(message))
@@ -44,25 +37,14 @@ class client:
         print('Quit: ', reply)
 
 
-    def command(self, action):#, rec_client):
+    def command(self, action):
         self.action_complete = False
-        #action_split = action.split()
 
-        # print('Atempting part 1')
-        reply = "-1"
-        while (reply == "-1" or reply == "1"):
-            print
-            if reply == "-1":
-                self.send(action)
-            reply = self.receive()
-        # print('Part 1 complete: ', reply)
+        self.send(action)
+        reply = self.receive()
+        print('Part 1 complete: ', reply)
 
-        # print('Atempting part 2')
-        reply = "1"
-        while reply == "1":
-            reply = self.receive()
-        # print('Part 2 complete: ', reply)
-        
-        #print(reply, " end of command\n------")
+        reply = self.receive()
+        print('Part 2 complete: ', reply)
 
         self.action_complete = True

@@ -26,7 +26,7 @@ class navigator:
         self.upper_hueG = np.array([60, 100, 60])
 
         self.lower_hueB = np.array([0, 0, 55])
-        self.upper_hueB = np.array([60, 105, 160])
+        self.upper_hueB = np.array([60, 140, 200])
 
         self.black = np.array([0, 0, 0])
 
