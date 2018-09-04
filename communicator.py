@@ -15,6 +15,10 @@ class client:
         self.mySocket.connect((self.SERVER_IP, self.PORT_NUMBER))
 
 
+    def close_connection(self):
+        self.mySocket.close()
+
+
     def receive(self):
         try:
             (data, address) = self.mySocket.recvfrom(self.SIZE)
@@ -44,20 +48,20 @@ class client:
         self.action_complete = False
         #action_split = action.split()
 
-        print('Atempting part 1')
+        # print('Atempting part 1')
         reply = "-1"
         while (reply == "-1" or reply == "1"):
             print
             if reply == "-1":
                 self.send(action)
             reply = self.receive()
-        print('Part 1 complete: ', reply)
+        # print('Part 1 complete: ', reply)
 
-        print('Atempting part 2')
+        # print('Atempting part 2')
         reply = "1"
         while reply == "1":
             reply = self.receive()
-        print('Part 2 complete: ', reply)
+        # print('Part 2 complete: ', reply)
         
         #print(reply, " end of command\n------")
 

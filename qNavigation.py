@@ -21,7 +21,7 @@ def move_robot(origin, target, state):
         return state
     section = state
 
-    print('--------\n', section, origin, target)
+    print(section, origin, target)
     diff = target - origin
     if diff == 3:
         section = str(int(section[0]) + 1) + section[1]
@@ -32,7 +32,7 @@ def move_robot(origin, target, state):
     else:
         section = str(int(section[0]) - 1) + section[1]
 
-    print(section, origin, target, '--------\n')
+    print(section, origin, target)
     navi.self_navigate(comms, section, True)
     return section
 
@@ -42,7 +42,6 @@ navigated = navi.self_navigate(comms, "00", True)
 if navigated is None:
     comms.close_connection()
     sys.exit(0)
-print('did not quittttting')
 navi.pre_re_align()
 
 ret, frame = capture.read()
@@ -75,27 +74,30 @@ for key in env_keys:
     i += 1
 
 env = gridworld(robot_env)
-Q = np.zeros((15, 4))
+Q = None#np.zeros((15, 4))
+with open(os.path.dirname(__file__) + '/Qtable.data', 'rb') as f:
+    f.seek(0)
+    Q = pickle.load(f)
+    f.close()
 
 learning = True
-while(learning):
+while(learning and Q is not None):
     state, reward = env.reset(robot_state)
     position = "00"
     while (env.terminal() == False):
         action = np.argmax(Q[state,:])
         new_state, new_reward = env.step(action)
 
-        target_score = reward + max(Q[new_state, :])
-        Q[state, action] = Q[state, action] + alpha*(target_score - Q[state, action])
+        target_score = reward + np.max(Q[new_state, :])
+        Q[state, action] = Q[state, action] + (alpha*(target_score - Q[state, action]))
         position = move_robot(state, new_state, position)
         state, reward = new_state, new_reward
-    Q[state] = [1, 1, 1, 1]
-    print(Q)
 
-    with open(os.path.dirname(__file__) + '/Qtable.data', 'w') as f:
-        pickle.dump(Q, f)
     navi.self_navigate(comms, "00", True)
     navi.pre_re_align()
-    learning = False
+    # env.show(Q=Q, gamma=2)
+    with open(os.path.dirname(__file__) + '/Qtable.data', 'wb') as f:
+        pickle.dump(Q, f)
+    # learning = False
 
 comms.close_connection()
