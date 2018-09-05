@@ -374,31 +374,26 @@ class navigator:
         x_diff = x_coords[front_hat] - robot_central_x
         y_diff = y_coords[front_hat] - robot_central_y
         #x = 192,  y = 180
-        print("=====\n", robot_key)
         if abs(x_diff) > abs(y_diff):
             if x_coords[front_hat] > robot_central_x:
                 #pointing towards 4n
                 next_key = str(int(robot_key[0]) + 1) + robot_key[1]
-                print('here 1: ', next_key, "\n=====")
                 next_x = int(next_key[0]) * 192 + (192/2)
                 distance = (next_x - robot_central_x) * 3.9
             else:
                 #pointing towards 0n
                 next_key = str(int(robot_key[0]) - 1) + robot_key[1]
-                print('here 2: ', next_key, "\n=====")
                 next_x = int(next_key[0]) * 192 + (192 / 2)
                 distance = (robot_central_x - next_x) * 3.9
         else:
             if y_coords[front_hat] > robot_central_y:
                 #pointing towards n3
                 next_key = robot_key[0] + str(int(robot_key[1]) + 1)
-                print('here 2: ', next_key, "\n=====")
                 next_y = int(next_key[1]) * 180 + (180 / 2)
                 distance = (next_y - robot_central_y) * 3.9
             else:
                 #pointing towards n0
                 next_key = robot_key[0] + str(int(robot_key[1]) - 1)
-                print('here 3: ', next_key, "\n=====")
                 next_y = int(next_key[1]) * 180 + (180 / 2)
                 distance = (robot_central_y - next_y) * 3.9
 
