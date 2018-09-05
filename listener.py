@@ -25,9 +25,6 @@ class receiver:
             return reply
         except Exception as e:
             print (e)
-            mySocket.listen(1)
-            self.connection, self.server_addr = mySocket.accept()
-        return ""
 
     def send(self, message):
         self.connection.sendall(str.encode(message))

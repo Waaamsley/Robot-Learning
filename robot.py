@@ -10,11 +10,8 @@ m1 = ev3.LargeMotor('outB')
 m2 = ev3.LargeMotor('outC')
 
 while listening:
-	reply = ""
-	while reply == "":
-		reply = receiver.receive()
-		if reply == "":
-			receiver.send("Process Finished")
+
+	reply = receiver.receive()
 	reply_split = reply.split()
 	print(reply, reply_split)
 	receiver.send('Handshake Complete')
@@ -31,8 +28,8 @@ while listening:
 		#robot turns x degrees
 		angle = reply_split[1]
 
-		m1.run_to_rel_pos(position_sp = int(angle), speed_sp = 100, stop_action='brake')
-		m2.run_to_rel_pos(position_sp = int(angle), speed_sp = 100, stop_action = 'brake')
+		m1.run_to_rel_pos(position_sp = int(angle), speed_sp = 200, stop_action='brake')
+		m2.run_to_rel_pos(position_sp = int(angle), speed_sp = 200, stop_action = 'brake')
 		m1.wait_while('running')
 		m2.wait_while('running')
 
@@ -42,6 +39,7 @@ while listening:
 
 		print(reply_split[0] + ' STOP')
 		#motor functions stop
+		sleep(0.3)
 		m1.stop(stop_action = 'brake')
 		m2.stop(stop_action = 'brake')
 		print('STOPPED')

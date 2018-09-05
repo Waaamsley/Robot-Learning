@@ -33,11 +33,11 @@ def move_robot(origin, target, state):
         section = str(int(section[0]) - 1) + section[1]
 
     print(section, origin, target)
-    navi.self_navigate(comms, section, True)
+    navi.self_navigate(comms, section)
     return section
 
 
-navigated = navi.self_navigate(comms, "00", True)
+navigated = navi.self_navigate(comms, "00")
 
 if navigated is None:
     comms.close_connection()
@@ -93,7 +93,7 @@ while(learning and Q is not None):
         position = move_robot(state, new_state, position)
         state, reward = new_state, new_reward
 
-    navi.self_navigate(comms, "00", True)
+    navi.self_navigate(comms, "00")
     navi.pre_re_align()
     # env.show(Q=Q, gamma=2)
     with open(os.path.dirname(__file__) + '/Qtable.data', 'wb') as f:

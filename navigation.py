@@ -198,7 +198,7 @@ class navigator:
             else:
                 direction = 'n'
                 change = start[0] + str(int(start[1]) - 1)
-        commands.append('st start')
+        #commands.append('st start')
         return commands
 
 
@@ -362,43 +362,66 @@ class navigator:
         angle_diff = self.get_angle_difference(x_coords[front_hat], y_coords[front_hat], dest_x, dest_y, rcx,
                              robot_central_y)
         angle = angle_diff * 1.9
-        if command[0] == 't':
-            return 't ' + str(int(angle))
+        #if command[0] == 't':
+            #return 't ' + str(int(angle))
+        #else:
+        return 'rt ' + str(int(angle))
+
+
+    def get_move(self, command, robot_key):
+        colour, x_coords, y_coords, robot_central_x, robot_central_y, front_hat = self.get_details()
+
+        x_diff = x_coords[front_hat] - robot_central_x
+        y_diff = y_coords[front_hat] - robot_central_y
+        #x = 192,  y = 180
+        print("=====\n", robot_key)
+        if abs(x_diff) > abs(y_diff):
+            if x_coords[front_hat] > robot_central_x:
+                #pointing towards 4n
+                next_key = str(int(robot_key[0]) + 1) + robot_key[1]
+                print('here 1: ', next_key, "\n=====")
+                next_x = int(next_key[0]) * 192 + (192/2)
+                distance = (next_x - robot_central_x) * 3.9
+            else:
+                #pointing towards 0n
+                next_key = str(int(robot_key[0]) - 1) + robot_key[1]
+                print('here 2: ', next_key, "\n=====")
+                next_x = int(next_key[0]) * 192 + (192 / 2)
+                distance = (robot_central_x - next_x) * 3.9
         else:
-            return 'rt ' + str(int(angle))
+            if y_coords[front_hat] > robot_central_y:
+                #pointing towards n3
+                next_key = robot_key[0] + str(int(robot_key[1]) + 1)
+                print('here 2: ', next_key, "\n=====")
+                next_y = int(next_key[1]) * 180 + (180 / 2)
+                distance = (next_y - robot_central_y) * 3.9
+            else:
+                #pointing towards n0
+                next_key = robot_key[0] + str(int(robot_key[1]) - 1)
+                print('here 3: ', next_key, "\n=====")
+                next_y = int(next_key[1]) * 180 + (180 / 2)
+                distance = (robot_central_y - next_y) * 3.9
+
+        com = "md " + str(int(distance))
+        return com
 
 
 
-    def command_brain(self, commands, robot_locales, command_count, transitioned, waiting):
+    def command_brain(self, commands, robot_locales, command_count):
         count = command_count
-        transition = transitioned
-        listening = waiting
         looper = True
+        robot_key = list(robot_locales.keys())[0]
         if count < len(commands) and self.client.action_complete:
-            if listening:
-                if count == 0 or commands[count][0] != 'm':
-                    com = commands[count]
-                    if commands[count][0:1] == 't':
-                        com = self.get_turn(commands[count])
-                    print (com)
-                    t1 = threading.Thread(target = self.client.command, args = [com])#, receive_client, ])
-                    t1.start()
-                    print('command sent')
-                transition = False
-                listening = False
-                if commands[count][0:2] == 'rt':
-                    count += 1
-                    transition = True
-                    listening = True
-                elif commands[count][0] == 't':
-                    count += 2
-                else:
-                    count += 1
-
-            if len(robot_locales) > 1 and not listening and not transition:
-                transition = True
-            elif len(robot_locales) == 1 and transition and not listening:
-                listening = True
+            com = commands[count]
+            if commands[count][0:1] == 't':
+                com = self.get_turn(commands[count])
+            elif commands[count][0:1] == 'm':
+                com = self.get_move(commands[count], robot_key)
+            print (com)
+            t1 = threading.Thread(target = self.client.command, args = [com])
+            t1.start()
+            print('command sent')
+            count += 1
 
         if count >= len(commands) and self.client.action_complete:
             print (list(robot_locales.keys()))
@@ -408,15 +431,15 @@ class navigator:
             # t1.start()
             looper = False
             cv2.destroyAllWindows()
-        return count, transition, listening, looper
+        return count, looper
 
 
-    def self_navigate(self, comms, reset_point, align):
+    def self_navigate(self, comms, reset_point):
         #robot_placed = input('Please place robot, enter anything to continue when done')
         # threading.Thread(target = watcher).start()
         self.client = comms
-        if align:
-            self.pre_re_align()
+
+        self.pre_re_align()
 
         # watcher_loop = False
         # sleep(1)
@@ -425,7 +448,6 @@ class navigator:
         frame = cv2.resize(frame, (0, 0), None, .5, .5)
         # cv2.imwrite('/Users/james/Desktop/frame.png', frame)
         frame = self.warp_me(frame)
-
 
         color = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         mask = self.threshold(color, 'Blue')
@@ -443,8 +465,6 @@ class navigator:
             return 1
 
         action_count = 0
-        moved = False
-        ready = True
         loop = True
         while loop:
             # capture frame by frame.
@@ -469,10 +489,7 @@ class navigator:
             h2, contours, h3 = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
             self.draw_all(frame, contours, wall_contours)
 
-            # client.stop()
-            # sleep(9)
-            action_count, moved, ready, loop = self.command_brain(actions, robot_sections, action_count, moved, ready)
-
+            action_count, loop = self.command_brain(actions, robot_sections, action_count)
             cv2.imshow('frame', frame)
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
