@@ -27,11 +27,11 @@ while listening:
 	elif (reply_split[0] == 'md'):
 		#robot turns x degrees
 		angle = reply_split[1]
-
-		m1.run_to_rel_pos(position_sp = int(angle), speed_sp = 200, stop_action='brake')
-		m2.run_to_rel_pos(position_sp = int(angle), speed_sp = 200, stop_action = 'brake')
-		m1.wait_while('running')
-		m2.wait_while('running')
+		if angle != 0:
+			m1.run_to_rel_pos(position_sp = int(angle), speed_sp = 200, stop_action='brake')
+			m2.run_to_rel_pos(position_sp = int(angle), speed_sp = 200, stop_action = 'brake')
+			m1.wait_while('running')
+			m2.wait_while('running')
 
 		receiver.send("Process Finished")
 
