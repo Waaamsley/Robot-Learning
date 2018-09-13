@@ -23,7 +23,7 @@ class client:
         try:
             (data, address) = self.mySocket.recvfrom(self.SIZE)
             reply = str(data)[2:-1]
-            print(reply)
+            # print(reply)
             return reply
         except error as e:
             print (e)
@@ -42,9 +42,9 @@ class client:
 
         self.send(action)
         reply = self.receive()
-        print('Part 1 complete: ', reply)
+        # print('Part 1 complete: ', reply)
 
         reply = self.receive()
-        print('Part 2 complete: ', reply)
+        # print('Part 2 complete: ', reply)
 
         self.action_complete = True

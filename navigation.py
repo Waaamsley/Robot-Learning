@@ -19,14 +19,14 @@ class navigator:
         self.out1 = None
         self.out2 = None
 
-        self.lower_hueR = np.array([75, 0, 0])
+        self.lower_hueR = np.array([100, 0, 0])
         self.upper_hueR = np.array([255, 50, 50])
 
         self.lower_hueG = np.array([30, 65, 30])
         self.upper_hueG = np.array([60, 100, 60])
 
-        self.lower_hueB = np.array([0, 0, 55])
-        self.upper_hueB = np.array([60, 140, 200])
+        self.lower_hueB = np.array([0, 30, 70])
+        self.upper_hueB = np.array([55, 120, 160])
 
         self.black = np.array([0, 0, 0])
 
@@ -140,7 +140,7 @@ class navigator:
         return wall_locales
 
 
-    def build_actions(self, grid, wall_locales, target):
+    def build_actions(self, grid, wall_locales, target, no_clip):
         robot_locales = self.find_robot(grid)
 
         robot_key = list(robot_locales.keys())[0]
@@ -148,14 +148,14 @@ class navigator:
         if robot_key == goal_key:
             return []
 
-        state_moves = aSearch.find_path(grid, wall_locales, goal_key, robot_key)
+        state_moves = aSearch.find_path(grid, wall_locales, goal_key, robot_key, no_clip)
         if state_moves is None:
             return None
 
         commands = self.convert(state_moves)
-        print ('----------------')
-        print(robot_key, ', ', goal_key)
-        print(commands)
+        # print ('----------------')
+        # print(robot_key, ', ', goal_key)
+        # print(commands)
 
         return commands
 
@@ -217,6 +217,8 @@ class navigator:
 
         n1 = self.normalise(x1_vector, y1_vector)
         n2 = self.normalise(x2_vector, y2_vector)
+        if n1 == 0 or n2 ==0:
+            return 0
         x1n_vector = x1_vector / n1
         y1n_vector = y1_vector / n1
         x2n_vector = x2_vector / n2
@@ -407,20 +409,22 @@ class navigator:
         looper = True
         robot_key = list(robot_locales.keys())[0]
         if count < len(commands) and self.client.action_complete:
+            if len(robot_locales) > 1:
+                self.pre_re_align()
             com = commands[count]
             if commands[count][0:1] == 't':
                 com = self.get_turn(commands[count])
             elif commands[count][0:1] == 'm':
                 com = self.get_move(commands[count], robot_key)
-            print (com)
+            # print (com)
             t1 = threading.Thread(target = self.client.command, args = [com])
             t1.start()
-            print('command sent')
+            # print('command sent')
             count += 1
 
         if count >= len(commands) and self.client.action_complete:
-            print (list(robot_locales.keys()))
-            print('----------------')
+            # print (list(robot_locales.keys()))
+            # print('----------------')
             # print('Terminating Connection')
             # t1 = threading.Thread(target=client.quit)
             # t1.start()
@@ -429,7 +433,7 @@ class navigator:
         return count, looper
 
 
-    def self_navigate(self, comms, reset_point):
+    def self_navigate(self, comms, reset_point, no_clip):
         #robot_placed = input('Please place robot, enter anything to continue when done')
         # threading.Thread(target = watcher).start()
         self.client = comms
@@ -452,7 +456,7 @@ class navigator:
         sections = self.section_dict(color)
         wall_sections = self.find_walls(sections)
 
-        actions = self.build_actions(sections, list(wall_sections.keys()), reset_point)
+        actions = self.build_actions(sections, list(wall_sections.keys()), reset_point, no_clip)
         if actions is None:
             print('no possible path, change walls or give more movement')
             return None

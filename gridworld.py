@@ -8,7 +8,7 @@ import warnings
 #Author: Lech Szymanski
 class gridworld:
 
-    def __init__(self, robot_env, R=-0.04, slippery=True):
+    def __init__(self, robot_env, R=-0.04, slippery=False):
 
         self.plot_handles = []
         self.grid = np.array(robot_env)#np.array([1,1,1,1,
@@ -25,7 +25,7 @@ class gridworld:
             if self.grid[i] > 1:
                 self.R[i] = self.grid[i]-3
             elif self.grid[i] < 1:
-                self.R[i] = 0
+                self.R[i] = -0.9
 
         self.num_actions = 4
 
@@ -72,8 +72,8 @@ class gridworld:
             next_state = s
         elif a == 3 and next_state % self.W == self.W - 1:
             next_state = s
-        elif self.grid[next_state] == 0:
-            next_state = s
+        # elif self.grid[next_state] == 0:
+        #     next_state = s
 
         return next_state
 

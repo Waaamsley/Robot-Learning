@@ -52,16 +52,20 @@ def get_heuristic(robot_key, goal_key):
 
     return heuristic
 
-def find_path(sections, wall_sections, goal_key, robot_key):
+def find_path(sections, wall_sections, goal_key, robot_key, no_clip):
     parent = state(robot_key, 0, get_heuristic(robot_key, goal_key), None, '')
     open_list = []
     closed_list = []
     open_list.append(parent)
     closed_list.append(parent.key)
+    walls = wall_sections
+
+    if (no_clip):
+        walls = []
 
     searching = True
     while (searching):
-        p_moves = get_moves(parent, wall_sections)
+        p_moves = get_moves(parent, walls)
         for move in p_moves:
             if move not in closed_list:
                 child = state(move, parent.cost + 1, get_heuristic(move, goal_key), parent.history.copy(), parent.key)
