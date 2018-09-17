@@ -47,7 +47,7 @@ def move_robot(origin, target, state):
 def get_action(values):
     results = []
     probs = []
-    gamma = 2
+    gamma = 4
     sum = 0
 
     for item in values:
@@ -109,10 +109,10 @@ env = gridworld(robot_env)
 
 Q = np.random.uniform(0, 0, (15, 4))
 Q[14] = [1, 1, 1, 1]
-with open(os.path.dirname(__file__) + '/Qbaseprob_dumb.data', 'wb') as f:
+with open(os.path.dirname(__file__) + '/Qbase_prob.data', 'wb') as f:
     pickle.dump(Q, f)
 Q = None
-with open(os.path.dirname(__file__) + '/Qbaseprob_dumb.data', 'rb') as f:
+with open(os.path.dirname(__file__) + '/Qbase_prob.data', 'rb') as f:
     f.seek(0)
     Q = pickle.load(f)
     f.close()
@@ -124,7 +124,7 @@ fails = 0
 while(learning and Q is not None):
     print("Iteration: ", iteration)
     print("--- %s seconds ---" % (time.time() - start_time))
-    #seen = []
+    seen = []
     state, reward = env.reset(robot_state)
     new_state = None
     position = "00"
@@ -135,10 +135,10 @@ while(learning and Q is not None):
         position = move_robot(state, new_state, position)
         # print(state, action, new_state)
 
-        # if new_state in seen:
-        #     reward = -0.5
-        # else:
-        #     seen.append(new_state)
+        if new_state in seen:
+            reward = -0.5
+        else:
+            seen.append(new_state)
         target_score = reward + np.max(Q[new_state])
         Q[state, action] = Q[state, action] + (alpha * (target_score - Q[state, action]))
         if reward == -0.9:
@@ -152,7 +152,7 @@ while(learning and Q is not None):
     if iteration % 10 == 0:
         print("Successses: ", 10 - fails)
         fails = 0
-    with open(os.path.dirname(__file__) + '/Qbaseprob_dumb.data', 'wb') as f:
+    with open(os.path.dirname(__file__) + '/Qbase_prob.data', 'wb') as f:
         pickle.dump(Q, f)
     navi.self_navigate(comms, "00", False)
     navi.pre_re_align()
