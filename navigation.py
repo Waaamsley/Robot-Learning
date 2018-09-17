@@ -20,7 +20,7 @@ class navigator:
         self.out2 = None
 
         self.lower_hueR = np.array([100, 0, 0])
-        self.upper_hueR = np.array([255, 50, 50])
+        self.upper_hueR = np.array([255, 65, 65])
 
         self.lower_hueG = np.array([30, 65, 30])
         self.upper_hueG = np.array([60, 100, 60])
@@ -336,6 +336,8 @@ class navigator:
         framez = cv2.resize(framez, (0, 0), None, .5, .5)
         framez = self.warp_me(framez)
         colour = cv2.cvtColor(framez, cv2.COLOR_BGR2RGB)
+        # cv2.imwrite('/Users/james/Desktop/frame.png', framez)
+        # print(framez[25, 910], framez[93, 877], framez[61, 837], framez[471, 932], framez[472, 920], framez[389, 918])
         grid = self.section_dict(colour)
         self.re_align(colour, grid)
 
@@ -407,10 +409,13 @@ class navigator:
     def command_brain(self, commands, robot_locales, command_count):
         count = command_count
         looper = True
+        re_calc = False
         robot_key = list(robot_locales.keys())[0]
         if count < len(commands) and self.client.action_complete:
             if len(robot_locales) > 1:
                 self.pre_re_align()
+                re_calc = True
+                return count, looper, re_calc
             com = commands[count]
             if commands[count][0:1] == 't':
                 com = self.get_turn(commands[count])
@@ -430,7 +435,7 @@ class navigator:
             # t1.start()
             looper = False
             cv2.destroyAllWindows()
-        return count, looper
+        return count, looper, re_calc
 
 
     def self_navigate(self, comms, reset_point, no_clip):
@@ -465,6 +470,7 @@ class navigator:
 
         action_count = 0
         loop = True
+        re_calc = False
         while loop:
             # capture frame by frame.
             ret2, frame = self.capture.read()
@@ -478,6 +484,10 @@ class navigator:
             color = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
             current_sections = self.section_dict(color)
+            if re_calc:
+                actions = self.build_actions(current_sections, list(wall_sections.keys()), reset_point, no_clip)
+                action_count = 0
+                re_calc = False
 
             robot_sections = self.find_robot(current_sections)
             if len(robot_sections) > 0:
@@ -488,7 +498,7 @@ class navigator:
             h2, contours, h3 = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
             self.draw_all(frame, contours, wall_contours)
 
-            action_count, loop = self.command_brain(actions, robot_sections, action_count)
+            action_count, loop, re_calc = self.command_brain(actions, robot_sections, action_count)
             cv2.imshow('frame', frame)
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
