@@ -90,6 +90,10 @@ class navigator:
         mask_open = cv2.morphologyEx(masked, cv2.MORPH_OPEN, self.kernelOpen)
         mask_close = cv2.morphologyEx(mask_open, cv2.MORPH_CLOSE, self.kernelClose)
 
+        # if colour == 'Blue':
+        #     all = np.hstack((masked, mask_open, mask_close))
+        #     cv2.imshow('Everything', all)
+
         return mask_close
 
 
@@ -484,6 +488,11 @@ class navigator:
             color = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
             current_sections = self.section_dict(color)
+
+            #test_walls = self.threshold(color, "Blue")
+            #cv2.imshow('wall masking',test_walls)
+
+
             if re_calc:
                 actions = self.build_actions(current_sections, list(wall_sections.keys()), reset_point, no_clip)
                 action_count = 0
@@ -498,7 +507,7 @@ class navigator:
             h2, contours, h3 = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
             self.draw_all(frame, contours, wall_contours)
 
-            action_count, loop, re_calc = self.command_brain(actions, robot_sections, action_count)
+            #action_count, loop, re_calc = self.command_brain(actions, robot_sections, action_count)
             cv2.imshow('frame', frame)
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
